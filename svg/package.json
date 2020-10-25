@@ -20,6 +20,6 @@
     "d3"
   ],
   "homepage": "https://www.graphery.orgs/svg",
-  "repository": "https://github.com/graphery/graphery/svg",
+  "repository": "https://github.com/graphery/graphery/tree/master/svg",
   "bugs": "https://github.com/graphery/graphery/issues"
 }
