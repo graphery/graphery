@@ -136,7 +136,7 @@ extension step by step.
 The easiest way to use gySVG library is to import it as an ES module from our CDN service:
 
 ```js
-import gySVG from 'https://cdn.graphery.online/svg/0.1.1/module/index.js';
+import gySVG from 'https://cdn.graphery.online/svg/0.1.3/module/index.js';
 ```
 
 #### script source
@@ -144,14 +144,14 @@ import gySVG from 'https://cdn.graphery.online/svg/0.1.1/module/index.js';
 Another way, very easy too, is to load the script version from our CDN with a tag `<script>`:
 
 ```html
-<script src="https://cdn.graphery.online/svg/0.1.1/script/index.js"></script>;
+<script src="https://cdn.graphery.online/svg/0.1.3/script/index.js"></script>;
 ```
 
 #### Understanding the URL from CDN
 
 This is the detailed description about CDN URL:
 
-     https://cdn.graphery.online/svg/0.1.1/module/index.js
+     https://cdn.graphery.online/svg/0.1.3/module/index.js
     |------|--------------------|---|-----|------|--------|
         |            |            |    |      |      |-------> file name
         |            |            |    |      |--------------> 'module' or 'script' mode
@@ -189,7 +189,7 @@ calls.
 ### Import
 
 ```js
-import gySVG from 'https://cdn.graphery.online/svg/0.1.1/module/index.js';
+import gySVG from 'https://cdn.graphery.online/svg/0.1.3/module/index.js';
 ```
 
 ### Manage elements
