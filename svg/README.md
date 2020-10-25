@@ -7,8 +7,7 @@ See the complete documentation in <https://www.graphery.org/svg/>
 **Graphery SVG** (**gySVG**) is a tiny, fast, and powerful library to simplify the construction and
 manipulation of SVG graphs from Javascript.
 
--   **Tiny**: the minimized library size is bellow 3 KB, and this value can be reduced to 1.4 KB
-    with gzip.
+-   **Tiny**: the minimized library size is 3 KB, and this value can be reduced to 1.54 KB with gzip.
 
 -   **Fast**: benchmarking with the fast SVG.JS library is very good. For the same process, gySVG
     takes 20ms and SVG.js more than 40ms.
@@ -137,13 +136,12 @@ extension step by step.
 The easiest way to use gySVG library is to import it as an ES module from our CDN service:
 
 ```js
-import SVG from 'https://cdn.graphery.online/svg/0.1.1/module/index.js';
+import gySVG from 'https://cdn.graphery.online/svg/0.1.1/module/index.js';
 ```
 
 #### script source
 
-Another way, very easy too, is to load the gysvg.js script version from our CDN with a simple tag 
-`<script>`:
+Another way, very easy too, is to load the script version from our CDN with a tag `<script>`:
 
 ```html
 <script src="https://cdn.graphery.online/svg/0.1.1/script/index.js"></script>;
@@ -151,7 +149,7 @@ Another way, very easy too, is to load the gysvg.js script version from our CDN 
 
 #### Understanding the URL from CDN
 
-This is the detailed description of CDN URL:
+This is the detailed description about CDN URL:
 
      https://cdn.graphery.online/svg/0.1.1/module/index.js
     |------|--------------------|---|-----|------|--------|
@@ -167,7 +165,7 @@ This is the detailed description of CDN URL:
 You can install the Graphery SVG library locally by NPM:
 
 ```bash
-npm install @graphery/gysvg
+npm install @graphery/svg
 ```
 
 If you have installed locally, you need to reference `node_modules/@graphery/svg` and use this
@@ -187,6 +185,12 @@ If you use Webpack or other loaders, you may be able to omit the `node_modules` 
 calls.
 
 ## Quick reference
+
+### Import
+
+```js
+import gySVG from 'https://cdn.graphery.online/svg/0.1.1/module/index.js';
+```
 
 ### Manage elements
 
@@ -220,17 +224,17 @@ myRect.attachTo(mySVG);
 ```
 
 `gySVG( tag_name )` create a new SVG element and returns its wrapper object. This element must be
-attached into an SVG element.
+attached into an SVG element with `.attachTo()`.
 
-#### _element_.add(tag_name)
+#### _element_.add(_tag_name_)
 
 ```js
-parentElement.add('rect');
+const rect = parentElement.add('rect');
 ```
 
 `.add( tag_name )` creates and attach a nested SVG element and returns its _gySVG wrapper_ object.
 
-#### _element_.attachTo(selector|element)
+#### _element_.attachTo(_selector_\|_element_)
 
 ```html
 <div id="content"></div>
@@ -244,21 +248,51 @@ mySvg.attachTo('#content');
 `element.attach(selector|element)` add the SVG element into the DOM. This method receive as
 parameter a string with a selector or a DOM element and put the SVG element into this.
 
-#### _element_.cloneNode()
+#### _element_.remove()
 
-**pending**
+```js
+element.remove();
+```
+
+`.remove()` deattach the object from the parent element.
+
+#### _element_.cloneNode([true])
+
+```js
+const svg = gySVG();
+const circle1 = svg.add('circle');
+const circle2 = circle1.cloneNode().attachTo(svg);
+```
+
+`.cloneNode()` create an element copy. If the parameter is `true`, the copy is in deep and other
+child elements are copied too. A clone node must be attached to an element with `.attachTo()`. 
 
 #### _element_.children()
 
-**pending**
+```js
+for (let el of element.children()) {
+  //...
+}
+```
+
+`.children()` returns an array with all nested elements.
 
 #### _element_.parent()
 
-**pending**
+```js
+const g = line.parent();
+```
 
-#### _element_.querySelector()
+`.parent()` returns the parent object or null if not exist.
 
-**pending**
+#### _element_.querySelector() and _element_.querySelectorAll()
+
+```js
+const lines = svg.querySelectorAll('line');
+```
+
+You can get any nested element with `.querySelector()` or `.querySelectorAll()` with a CSS
+selector as parameter.
 
 ### Manage attributes
 
@@ -307,15 +341,15 @@ The rest of the name stays the same. Here are some examples:
 
 ##### _element_.id()
 
-**pending**
+It returns the current unique identification.
 
 ##### _element_.href()
 
-**pending**
+It returns the unique identification as a `#id`
 
 ##### _element_.url()
 
-**pending**
+It returns the unique identification as a `url(id)`
 
 ### Manage properties
 
@@ -475,7 +509,7 @@ console.log(svg.source());
 If you need to get the element source, included the element, you can use `.source()`. This method
 return the source element as a text.
 
-### Original object
+### Original SVG object
 
 #### _element_.el
 
