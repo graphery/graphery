@@ -19,7 +19,7 @@
     "snap.svg",
     "d3"
   ],
-  "homepage": "https://www.graphery.orgs/svg",
+  "homepage": "https://www.graphery.org/svg",
   "repository": "https://github.com/graphery/graphery/tree/master/svg",
   "bugs": "https://github.com/graphery/graphery/issues"
 }
