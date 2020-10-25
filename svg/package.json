@@ -1,0 +1,25 @@
+{
+  "name": "@graphery/svg",
+  "description": "Graphery SVG library",
+  "version": "0.1.2",
+  "type": "module",
+  "license": "MIT",
+  "keywords": [
+    "svg",
+    "gysvg",
+    "graphery",
+    "vector",
+    "graphics",
+    "visualization",
+    "icon",
+    "animation",
+    "dom",
+    "browser",
+    "svgjs",
+    "snap.svg",
+    "d3"
+  ],
+  "homepage": "https://www.graphery.orgs/svg",
+  "repository": "https://github.com/graphery/graphery/svg",
+  "bugs": "https://github.com/graphery/graphery/issues"
+}
