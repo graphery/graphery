@@ -1,6 +1,6 @@
 # ![graphery](https://cdn.graphery.online/img/gy.svg) Graphery SVG - gySVG
 
-A wonderful library to easily create and manipulate SVG in Javascript. Based on the proxy, it 
+A excellent library to easily create and manipulate SVG in Javascript. Based on the proxy, it 
 offers a simple API, very close to the native structure of SVG.
 
 See the complete documentation in <https://www.graphery.org/svg/>
@@ -41,7 +41,7 @@ manipulation of SVG graphs from Javascript.
 -   **Tiny**: the minimized library size is less than 3 KB, and this value can be reduced to 1.5 KB
     with gzip.
 
--   **Fast**: benchmarking with the fast SVG.JS library is very good. For the same process, gySVG
+-   **Fast**: benchmarking with the excellent SVG.JS library is very good. For the same process, gySVG
     takes 20ms and SVG.js more than 40ms.
 
 -   **Powerful**: you can use all attributes, properties, and methods of SVG versions 1.0, 1.1, and 
@@ -122,7 +122,7 @@ calls.
 ### Browser support
 
 The magic of gySVG is the use of `Proxy`, one of the most powerful features of ES6. Javascript's
-proxies allow create dynamically the wrappers for each SVG element, reduce the library's 
+proxies allow creating the wrappers dynamically for each SVG element, reduce the library's 
 size, and keep the performance.
 
 Proxy is supported by:
@@ -142,20 +142,20 @@ libraries as:
 
 ### Framework support
 
-This library can be used from vanilla Javascript and frameworks as React, Vue, Svelte, Stencil, or
-Angular. gySVG is agnostic to the frameworks, it always works on the SVG element. If your
+This library can be used from vanilla Javascript and frameworks like React, Vue, Svelte, Stencil, or
+Angular. gySVG is agnostic to the frameworks; it always works on the SVG element. If your
 framework covers SVG elements, you should keep in mind that gySVG only works with native elements.
 
 ### Server-side rendering
 
 gySVG is ready to work both on the client and the server. This library is tested with 
 [Node](https://nodejs.org/) and [JSDom](https://github.com/jsdom/jsdom) for server-side 
-rendering (SSR). You can put the SVG generated into the DOM or obtain directly the SVG code 
+rendering (SSR). You can put the SVG generated into the DOM or obtain the SVG code directly 
 with `svg.source()`. 
 
 ### Extensible
 
-Although the functionality of gySVG is very extensive, there are always some features that are not 
+Although the functionality of gySVG is extensive, there are always some features that are not 
 available from the beginning. This library can be extended with new functionality by 
 [plugins](https://www.graphery.org/svg/16-Plugins.html). In that guide, you will see some examples and learn how to create your 
 extension step by step.  
