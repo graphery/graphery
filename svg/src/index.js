@@ -3,7 +3,6 @@ const NS           = 'http://www.w3.org/2000/svg';
 const OBJECT       = 'object';
 const FUNCTION     = 'function';
 const STRING       = 'string';
-const NUMBER       = 'number';
 const UNDEFINED    = 'undefined';
 const EMPTY        = '';
 const cache        = new WeakMap ();
@@ -97,52 +96,24 @@ class gySVGObject {
    * @return {gySVGObject}
    */
   animateTo (attributes, duration = 200) {
-    let startTime         = 0;
-    const targetValue     = {};
-    const originalValue   = {};
-    const originalMeasure = {};
-    const attributesKeys  = Object.keys (attributes);
-    for (let i = 0; i < attributesKeys.length; i++) {
-      const attr         = attributesKeys[ i ];
-      const currentParts = getValueUnit (this[ attr ] ());
-      const targetParts  = getValueUnit (attributes[ attr ]);
-      if (
-        (targetParts.measure && currentParts.measure !== targetParts.measure) ||
-        !type (targetParts.value, NUMBER) ||
-        !type (currentParts.value, NUMBER)
-      ) {
-        attributesKeys.splice (i--, 1);
-        this[ attr ] (attributes[ attr ]);
-        // console.warn (
-        //   `The attribute "${ attr }" cannot be animated: ${ currentParts.origin } to ${ targetParts.origin }.`
-        // );
-        continue;
-      }
-      originalValue[ attr ]   = currentParts.value;
-      targetValue[ attr ]     = targetParts.value;
-      originalMeasure[ attr ] = currentParts.measure;
+    const animates = [];
+    for (let attr of Object.keys (attributes)) {
+      const animate = this.add ('animate')
+        .attributeName (attr)
+        .to (attributes[ attr ])
+        .fill ('freeze')
+        .dur (duration + 'ms');
+      animate.beginElement ();
+      animates.push (animate);
     }
-    const step = (timestamp) => {
-      if (!startTime) {
-        startTime = timestamp;
+    setTimeout (() => {
+      for (let attr of Object.keys (attributes)) {
+        this[ attr ] (attributes[ attr ]);
       }
-      const runtime  = timestamp - startTime;
-      const progress = Math.min (runtime / duration, 1) || 0.01;
-      for (let attr of attributesKeys) {
-        this[ attr ] (
-          `${
-            (originalValue[ attr ] + ((attributes[ attr ] - originalValue[ attr ]) * progress))
-              .toFixed (2)
-          }${
-            (originalMeasure[ attr ] || EMPTY)
-          }`
-        );
-      }
-      if (runtime < duration) {
-        requestAnimationFrame (step);
-      }
-    };
-    step (startTime);
+      animates.forEach (e => {
+        e.remove ();
+      })
+    }, duration + 10);
     return this;
   }
   
@@ -183,21 +154,6 @@ const isWrapped = (el) => typeof el === OBJECT && el[ Symbol.toStringTag ] === N
  * @returns {gySVGObject}
  */
 const create = (tag) => wrapper (document.createElementNS (NS, tag));
-
-/**
- *
- * @param value
- * @returns {{origin : *, value : *}|*}
- */
-const getValueUnit = value => {
-  if (type (value, STRING)) {
-    const r = value.match (/^(^-?\d+(?:\.\d+)?)(.*)$/);
-    return r === null ?
-      {origin : value, value} :
-      {origin : value, value : Number (r[ 1 ]), measure : r[ 2 ] || EMPTY};
-  }
-  return {origin : value, value};
-};
 
 /**
  * return the original method name for an alias
@@ -283,7 +239,7 @@ const wrapper = (element) => {
   );
   cache.set (element, proxy);
   return proxy;
-}
+};
 
 /**
  *
@@ -364,7 +320,7 @@ const methodWrapper = (element, prop, parentWrapper, parentProp) => {
       }
     }
   );
-}
+};
 
 /**
  * adaptedResult
@@ -383,7 +339,7 @@ const adaptedResult = (result) => {
             Number (result) :
           result
   );
-}
+};
 
 /**
  * pluginCallback
@@ -395,7 +351,7 @@ const pluginCallback = (wrapped, prop, args) => {
   if (wrapped._call) {
     return wrapped._call (wrapped, prop, args);
   }
-}
+};
 
 /**
  * gySVGObject

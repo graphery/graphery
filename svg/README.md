@@ -1,13 +1,45 @@
 # ![graphery](https://cdn.graphery.online/img/gy.svg) Graphery SVG - gySVG
 
+A wonderful library to easily create and manipulate SVG in Javascript. Based on the proxy, it 
+offers a simple API, very close to the native structure of SVG.
+
 See the complete documentation in <https://www.graphery.org/svg/>
+
+### Table of Contents
+
+-   [Introduction](#introduction)
+
+    -   [Goal: reduce code complexity](#goal-reduce-code-complexity)
+    -   [API style: method chaining](#api-style-method-chaining)
+    -   [Browser support](#browser-support)
+    -   [Framework support](#framework-support)
+    -   [Server-side rendering](#server-side-rendering)
+    -   [Extensible](#extensible)
+
+-   [Load](#load)
+
+    -   [From CDN](#from-cdn)
+    -   [Install locally with NPM](#install-locally-with-npm)
+
+-   [Quick reference](#quick-reference)
+
+    -   [Import](#import)
+    -   [Manage elements](#manage-elements)
+    -   [Manage attributes](#manage-attributes)
+    -   [Manage properties](#manage-properties)
+    -   [Manage methods](#manage-methods)
+    -   [Simple animation](#simple-animation)
+    -   [Content and source](#content-and-source)
+    -   [Original SVG object](#original-svg-object)
+    -   [Is a gySVG wrapper?](#is-a-gysvg-wrapper)
 
 ## Introduction
 
 **Graphery SVG** (**gySVG**) is a tiny, fast, and powerful library to simplify the construction and
 manipulation of SVG graphs from Javascript.
 
--   **Tiny**: the minimized library size is 3 KB, and this value can be reduced to 1.54 KB with gzip.
+-   **Tiny**: the minimized library size is less than 3 KB, and this value can be reduced to 1.5 KB
+    with gzip.
 
 -   **Fast**: benchmarking with the fast SVG.JS library is very good. For the same process, gySVG
     takes 20ms and SVG.js more than 40ms.
@@ -15,37 +47,35 @@ manipulation of SVG graphs from Javascript.
 -   **Powerful**: you can use all attributes, properties, and methods of SVG versions 1.0, 1.1, and 
     2.0. The API is straightforward and very close to the SVG structure.
 
+### Goal: reduce code complexity
+
 **Why** a new SVG library? In the Graphery projects, we have intensively created and manipulated 
 SVG graphics from Javascript. After evaluating all SVG libraries, we were aware of the need to 
 build a new library much smaller, faster, and closer to the SVG format. The result is gySVG, a 
 simple library that provides an easy way to work with SVG without penalizing the project 
 performance or size.
 
-### Goal: reduce code complexity
-
-The source code for creating and manipulating SVG elements tends to grow and becomes challenging to 
-understand and maintain code. Creating a simple SVG requires many lines of code with Vanilla
-Javascript.
+The Javascript source code for creating and manipulating SVG elements tends to grow and becomes
+challenging to understand and maintain code. Creating a simple SVG requires many lines of code 
+with Vanilla Javascript.
 
 ```js
-const div     = document.querySelector ('#drawing');
-const svg     = document.createElementNS ('http://www.w3.org/2000/svg', 'svg');
-svg.setAttribute ('width', '100%');
-svg.setAttribute ('height', '100%');
-div.appendChild (svg);
-const rect = document.createElementNS ('http://www.w3.org/2000/svg', 'rect');
-rect.setAttribute ('x', '10');
-rect.setAttribute ('y', '10');
-rect.setAttribute ('width', '90');
-rect.setAttribute ('height', '90');
-rect.setAttribute ('fill', '#F06');
-svg.appendChild (rect);
+const div = document.querySelector('#drawing');
+const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+svg.setAttribute('width', '100%');
+svg.setAttribute('height', '100%');
+div.appendChild(svg);
+const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+rect.setAttribute('x', '10');
+rect.setAttribute('y', '10');
+rect.setAttribute('width', '90');
+rect.setAttribute('height', '90');
+rect.setAttribute('fill', '#F06');
+svg.appendChild(rect);
 ```
 
 gySVG simplifies the creation and manipulation through a set of very light methods that fit SVG
-DOM attributes, properties, and methods.
-
-This is the equivalent code write with gySVG:
+DOM attributes, properties, and methods. This is the equivalent code write with gySVG:
 
 ```js
 const svg = gySVG().width('100%').height('100%');
@@ -105,7 +135,10 @@ Proxy is supported by:
 
 `Proxy` is not supported by Internet Explorer 11 (and it's not possible to use polyfills or 
 transpilers for this feature). If you need compatibility with old browsers, use other excellent 
-libraries as [svg.js](https://svgjs.com/) or [snap.svg](http://snapsvg.io/).
+libraries as:
+
+-   [svg.js](https://svgjs.com/) 
+-   [snap.svg](http://snapsvg.io/).
 
 ### Framework support
 
@@ -124,7 +157,7 @@ with `svg.source()`.
 
 Although the functionality of gySVG is very extensive, there are always some features that are not 
 available from the beginning. This library can be extended with new functionality by 
-[plugins](https://www.graphery.org/gysvg/guide/15-plugins.html). In that guide, you will see some examples and learn how to create your 
+[plugins](https://www.graphery.org/svg/16-Plugins.html). In that guide, you will see some examples and learn how to create your 
 extension step by step.  
 
 ## Load
@@ -161,6 +194,8 @@ This is the detailed description about CDN URL:
         |----------------------------------------------------> protocol (please, use 'https')
 
 ### Install locally with NPM
+
+See <https://www.npmjs.com/package/@graphery/svg>.
 
 You can install the Graphery SVG library locally by NPM:
 
@@ -412,7 +447,7 @@ svg.classList.add('test')
 `style` is a very special case because is an attribute and a deep object with properties. In this
 case you can use `.style()` to access as attribute and `.style.` to access its child properties.
 
-The properties of the \`.style' object are wrapped and its properties are now methods with the same
+The properties of the `.style` object are wrapped and its properties are now methods with the same
 name as the original property name:
 
 | style name        | gySVG method        |

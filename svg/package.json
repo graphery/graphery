@@ -1,7 +1,7 @@
 {
   "name": "@graphery/svg",
   "description": "Graphery SVG library",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "type": "module",
   "license": "MIT",
   "keywords": [
@@ -16,10 +16,30 @@
     "dom",
     "browser",
     "svgjs",
+    "svg.js",
     "snap.svg",
     "d3"
   ],
-  "homepage": "https://www.graphery.org/svg",
+  "homepage": "https://www.graphery.org/svg/",
   "repository": "https://github.com/graphery/graphery/tree/master/svg",
-  "bugs": "https://github.com/graphery/graphery/issues"
+  "bugs": "https://github.com/graphery/graphery/issues",
+  "constributors": [
+    {
+      "name": "Pablo Almunia",
+      "email": "pabloalmunia@gmail.com",
+      "url": "https://github.com/pabloalmunia"
+    },
+    {
+      "url": "https://github.com/samuelmgalan"
+    },
+    {
+      "url": "https://github.com/javi3rms"
+    },
+    {
+      "name": "Irene Arribas"
+    },
+    {
+      "url": "https://github.com/todojs"
+    }
+  ]
 }

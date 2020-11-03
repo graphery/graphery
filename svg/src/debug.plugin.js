@@ -5,17 +5,341 @@
  * - error level                                                                     => DONE
  * - check ...<method>()                 => only methods available                   => DONE
  * - support style methods                                                           => DONE
+ * - support classList methods                                                       => DONE
+ * - check <parent>.add( '<child>' )     => only valid nested element                => DONE
+ * - Add new methods (by plugin)                                                     => DONE
  * PENDING:
- * - support classList methods                                                       => PENDING
  * - check <element>.<method>()          => only methods available into the element  => PENDING
  * - check <element>.<method>(<...args>) => only valid arguments type                => PENDING
- * - check <parent>.add( '<child>' )     => only valid nested element                => PENDING
  * - warning level (for parameter check)                                             => PENDING
- * - API for add new methods (by plugin)                                             => PENDING
  * - Replace Object.assign with Object.defineProperties                              => PENDING
  */
 
 const NAME                    = 'gySVG debug -';
+const ELEMENTS                = {
+  a                   : [
+    'animate', 'animateMotion', 'animateTransform',
+    'circle', 'clipPath', 'defs',
+    'desc', 'discard', 'ellipse',
+    'filter', 'foreignObject', 'g',
+    'image', 'line', 'linearGradient',
+    'marker', 'mask', 'metadata',
+    'mpath', 'path', 'pattern',
+    'polygon', 'polyline', 'radialGradient',
+    'rect', 'set', 'stop',
+    'style', 'svg', 'switch',
+    'symbol', 'text', 'title',
+    'use', 'view'
+  ],
+  animate             : ['desc', 'metadata', 'title'],
+  animateMotion       : ['desc', 'metadata', 'mpath', 'title'],
+  animateTransform    : ['desc', 'metadata', 'title'],
+  circle              : [
+    'animate', 'animateMotion', 'animateTransform', 'desc', 'discard',
+    'metadata', 'mpath', 'set', 'title'
+  ],
+  clipPath            : [
+    'animate', 'animateMotion',
+    'animateTransform', 'circle',
+    'desc', 'discard',
+    'ellipse', 'line',
+    'metadata', 'mpath',
+    'path', 'polygon',
+    'polyline', 'rect',
+    'set', 'text',
+    'title', 'use'
+  ],
+  defs                : [
+    'a', 'animate', 'animateMotion',
+    'animateTransform', 'circle', 'clipPath',
+    'defs', 'desc', 'discard',
+    'ellipse', 'filter', 'foreignObject',
+    'g', 'image', 'line',
+    'linearGradient', 'marker', 'mask',
+    'metadata', 'mpath', 'path',
+    'pattern', 'polygon', 'polyline',
+    'radialGradient', 'rect', 'set',
+    'stop', 'style', 'svg',
+    'switch', 'symbol', 'text',
+    'title', 'use', 'view'
+  ],
+  desc                : [],
+  discard             : ['desc', 'metadata', 'title'],
+  ellipse             : [
+    'animate',
+    'animateMotion',
+    'animateTransform',
+    'desc',
+    'discard',
+    'metadata',
+    'mpath',
+    'set',
+    'title'
+  ],
+  feBlend             : ['animate', 'set'],
+  feColorMatrix       : ['animate', 'set'],
+  feComponentTransfer : ['feFuncA', 'feFuncB', 'feFuncG', 'feFuncR'],
+  feComposite         : ['animate', 'set'],
+  feConvolveMatrix    : ['animate', 'set'],
+  feDiffuseLighting   : ['desc', 'metadata', 'title'],
+  feDisplacementMap   : ['animate', 'set'],
+  feDistantLight      : ['animate', 'set'],
+  feDropShadow        : ['animate', 'set'],
+  feFlood             : ['animate', 'set'],
+  feFuncA             : ['animate', 'set'],
+  feFuncB             : ['animate', 'set'],
+  feFuncG             : ['animate', 'set'],
+  feFuncR             : ['animate', 'set'],
+  feGaussianBlur      : ['animate', 'set'],
+  feImage             : ['animate', 'animateTransform', 'set'],
+  feMerge             : ['feMergeNode'],
+  feMergeNode         : ['animate', 'set'],
+  feMorphology        : ['animate', 'set'],
+  feOffset            : ['animate', 'set'],
+  fePointLight        : ['animate', 'set'],
+  feSpecularLighting  : ['desc', 'metadata', 'title'],
+  feSpotLight         : ['animate', 'set'],
+  feTile              : ['animate', 'set'],
+  feTurbulence        : ['animate', 'set'],
+  filter              : [
+    'animate', 'desc',
+    'feBlend', 'feColorMatrix',
+    'feComponentTransfer', 'feComposite',
+    'feConvolveMatrix', 'feDiffuseLighting',
+    'feDisplacementMap', 'feDropShadow',
+    'feFlood', 'feFuncA',
+    'feFuncB', 'feFuncG',
+    'feFuncR', 'feGaussianBlur',
+    'feImage', 'feMerge',
+    'feMergeNode', 'feMorphology',
+    'feOffset', 'feSpecularLighting',
+    'feTile', 'feTurbulence',
+    'metadata', 'set',
+    'title'
+  ],
+  foreignObject       : [],
+  g                   : [
+    'a', 'animate', 'animateMotion',
+    'animateTransform', 'circle', 'clipPath',
+    'defs', 'desc', 'discard',
+    'ellipse', 'filter', 'foreignObject',
+    'g', 'image', 'line',
+    'linearGradient', 'marker', 'mask',
+    'metadata', 'mpath', 'path',
+    'pattern', 'polygon', 'polyline',
+    'radialGradient', 'rect', 'set',
+    'stop', 'style', 'svg',
+    'switch', 'symbol', 'text',
+    'title', 'use', 'view'
+  ],
+  image               : [
+    'animate',
+    'animateMotion',
+    'animateTransform',
+    'desc',
+    'discard',
+    'metadata',
+    'mpath',
+    'set',
+    'title'
+  ],
+  line                : [
+    'animate',
+    'animateMotion',
+    'animateTransform',
+    'desc',
+    'discard',
+    'metadata',
+    'mpath',
+    'set',
+    'title'
+  ],
+  linearGradient      : [
+    'animate',
+    'animateTransform',
+    'desc',
+    'metadata',
+    'set',
+    'stop',
+    'title'
+  ],
+  marker              : [
+    'a', 'animate', 'animateMotion',
+    'animateTransform', 'circle', 'clipPath',
+    'defs', 'desc', 'discard',
+    'ellipse', 'filter', 'foreignObject',
+    'g', 'image', 'line',
+    'linearGradient', 'marker', 'mask',
+    'metadata', 'mpath', 'path',
+    'pattern', 'polygon', 'polyline',
+    'radialGradient', 'rect', 'set',
+    'stop', 'style', 'svg',
+    'switch', 'symbol', 'text',
+    'title', 'use', 'view'
+  ],
+  mask                : [
+    'a', 'animate', 'animateMotion',
+    'animateTransform', 'circle', 'clipPath',
+    'defs', 'desc', 'discard',
+    'ellipse', 'filter', 'foreignObject',
+    'g', 'image', 'line',
+    'linearGradient', 'marker', 'mask',
+    'metadata', 'mpath', 'path',
+    'pattern', 'polygon', 'polyline',
+    'radialGradient', 'rect', 'set',
+    'stop', 'style', 'svg',
+    'switch', 'symbol', 'text',
+    'title', 'use', 'view'
+  ],
+  metadata            : [],
+  mpath               : ['desc', 'metadata', 'title'],
+  path                : [
+    'animate',
+    'animateMotion',
+    'animateTransform',
+    'desc',
+    'discard',
+    'metadata',
+    'mpath',
+    'set',
+    'title'
+  ],
+  pattern             : [
+    'a', 'animate', 'animateMotion',
+    'animateTransform', 'circle', 'clipPath',
+    'defs', 'desc', 'discard',
+    'ellipse', 'filter', 'foreignObject',
+    'g', 'image', 'line',
+    'linearGradient', 'marker', 'mask',
+    'metadata', 'mpath', 'path',
+    'pattern', 'polygon', 'polyline',
+    'radialGradient', 'rect', 'set',
+    'stop', 'style', 'svg',
+    'switch', 'symbol', 'text',
+    'title', 'use', 'view'
+  ],
+  polygon             : [
+    'animate',
+    'animateMotion',
+    'animateTransform',
+    'desc',
+    'discard',
+    'metadata',
+    'mpath',
+    'set',
+    'title'
+  ],
+  polyline            : [
+    'animate',
+    'animateMotion',
+    'animateTransform',
+    'desc',
+    'discard',
+    'metadata',
+    'mpath',
+    'set',
+    'title'
+  ],
+  radialGradient      : [
+    'animate',
+    'animateTransform',
+    'desc',
+    'metadata',
+    'set',
+    'stop',
+    'title'
+  ],
+  rect                : [
+    'animate',
+    'animateMotion',
+    'animateTransform',
+    'desc',
+    'discard',
+    'metadata',
+    'mpath',
+    'set',
+    'title'
+  ],
+  set                 : ['desc', 'metadata', 'title'],
+  stop                : ['animate', 'set'],
+  style               : [],
+  svg                 : [
+    'a', 'animate', 'animateMotion',
+    'animateTransform', 'circle', 'clipPath',
+    'defs', 'desc', 'discard',
+    'ellipse', 'filter', 'foreignObject',
+    'g', 'image', 'line',
+    'linearGradient', 'marker', 'mask',
+    'metadata', 'mpath', 'path',
+    'pattern', 'polygon', 'polyline',
+    'radialGradient', 'rect', 'set',
+    'stop', 'style', 'svg',
+    'switch', 'symbol', 'text',
+    'title', 'use', 'view'
+  ],
+  switch              : [
+    'a', 'animate',
+    'animateMotion', 'animateTransform',
+    'circle', 'desc',
+    'discard', 'ellipse',
+    'foreignObject', 'g',
+    'image', 'line',
+    'metadata', 'mpath',
+    'path', 'polygon',
+    'polyline', 'rect',
+    'set', 'svg',
+    'switch', 'text',
+    'title', 'use'
+  ],
+  symbol              : [
+    'a', 'animate', 'animateMotion',
+    'animateTransform', 'circle', 'clipPath',
+    'defs', 'desc', 'discard',
+    'ellipse', 'filter', 'foreignObject',
+    'g', 'image', 'line',
+    'linearGradient', 'marker', 'mask',
+    'metadata', 'mpath', 'path',
+    'pattern', 'polygon', 'polyline',
+    'radialGradient', 'rect', 'set',
+    'stop', 'style', 'svg',
+    'switch', 'symbol', 'text',
+    'title', 'use', 'view'
+  ],
+  text                : [
+    'a', 'animate',
+    'animateMotion', 'animateTransform',
+    'desc', 'discard',
+    'metadata', 'mpath',
+    'set', 'text',
+    'textPath', 'title',
+    'tspan'
+  ],
+  textPath            : [
+    'a', 'animate',
+    'desc', 'metadata',
+    'set', 'title',
+    'tspan'
+  ],
+  title               : [],
+  tspan               : [
+    'a', 'animate',
+    'desc', 'metadata',
+    'set', 'title',
+    'tspan'
+  ],
+  use                 : [
+    'animate',
+    'animateMotion',
+    'animateTransform',
+    'desc',
+    'discard',
+    'metadata',
+    'mpath',
+    'set',
+    'title'
+  ],
+  view                : ['desc', 'metadata', 'title']
+};
 const METHODS                 = {
   'url'                          : [],
   'accumulate'                   : [],
@@ -786,21 +1110,23 @@ const STYLE                   = [
   'zIndex',
   'zoom'
 ];
-const isValidMethod           = (tag, f) => {
+const isValidElement          = (parent, child) => ELEMENTS[ parent ] && ELEMENTS[ parent ].includes (child);
+const isValidMethod           = (gySVGObject, tag, f) => {
+  // debugger;
   return (
     f.indexOf ('style.') === 0 ?
       isValidStyleMethod (tag, f.substring (6)) :
       f.indexOf ('classList.') === 0 ?
         isValidClassListMethod (tag, f.substring (10)) :
-        !!METHODS[ f ]
+        gySVGObject.prototype[f] || !!METHODS[ f ]
   );
 };
 const isValidMethodParameters = (tag, f) => true;
 const isValidStyleMethod      = (tag, f) => !!STYLE.includes (f);
 const isValidClassListMethod  = (tag, f) => !!CLASSLIST.includes (f);
 
-
 export default function install (gySVG, gySVGObject) {
+
   // Update gySVG
   Object.assign (
     gySVG,
@@ -836,8 +1162,11 @@ export default function install (gySVG, gySVGObject) {
           return;
         }
         const tag = wrapped.el.tagName;
-        if (!isValidMethod (tag, prop)) {
+        if (!isValidMethod (gySVGObject, tag, prop)) {
           return console.error (`${ NAME } unknown method ${ tag }.${ prop }() ${ origin () }`);
+        }
+        if (prop === 'add' && !isValidElement (tag, args[ 0 ])) {
+          return console.error (`${ NAME } invalid element ${ tag }.${ prop }( '${ args[ 0 ] }' ) ${ origin () }`);
         }
         if (gySVG._debug >= gySVG.DEBUG_WARNING && !isValidMethodParameters (tag, prop)) {
           console.warn (`${ NAME } call ${ tag }.${ prop }( ${ toString (args) } )`);
