@@ -17,7 +17,9 @@ const readonlyProp = new Set ();
  */
 class gySVGObject {
   constructor (element) {
-    this._el = element;
+    this._el       = element;
+    this._animates = [];
+    this._timeouts = [];
   }
   
   get [ Symbol.toStringTag ] () {
@@ -93,27 +95,54 @@ class gySVGObject {
   /**
    * @param {Object} attributes
    * @param {number} duration
+   * @param {Function} [start]
+   * @param {Function} [end]
    * @return {gySVGObject}
    */
-  animateTo (attributes, duration = 200) {
-    const animates = [];
-    for (let attr of Object.keys (attributes)) {
-      const animate = this.add ('animate')
-        .attributeName (attr)
-        .to (attributes[ attr ])
-        .fill ('freeze')
-        .dur (duration + 'ms');
-      animate.beginElement ();
-      animates.push (animate);
-    }
-    setTimeout (() => {
+  animateTo (attributes, duration = 200, start, end) {
+    const animates  = this._animates;
+    const timeouts  = this._timeouts;
+    const clean     = () => {
+      timeouts.forEach (t => clearTimeout (t));
+      timeouts.length = 0;
+      animates.forEach (e => e.remove ());
+      animates.length = 0;
+    };
+    const transform = (event = true) => {
+      clean ();
       for (let attr of Object.keys (attributes)) {
         this[ attr ] (attributes[ attr ]);
       }
-      animates.forEach (e => {
-        e.remove ();
-      })
-    }, duration + 10);
+      if (typeof end === 'function') {
+        end(this);
+      }
+    };
+    
+    if (duration === 0) {
+      transform (false);
+      return this;
+    }
+    
+    clean ();
+    let added = false;
+    for (let attr of Object.keys (attributes)) {
+      if (this[ attr ] () !== attributes[ attr ]) {
+        added         = true;
+        const animate = this.add ('animate')
+          .attributeName (attr)
+          .to (attributes[ attr ])
+          .fill ('freeze')
+          .dur (duration + 'ms');
+        animate.beginElement ();
+        animates.push (animate);
+      }
+    }
+    if (added) {
+      if (typeof start === 'function') {
+        start(this);
+      }
+      timeouts.push (setTimeout (transform, duration + 10));
+    }
     return this;
   }
   
@@ -186,7 +215,7 @@ const wrapper = (element) => {
     {
       get (wrapped, prop) {
         // Direct return
-        if (['_call', '_el', 'el', Symbol.toStringTag].includes (prop)) {
+        if (['el', Symbol.toStringTag].includes (prop) || prop[ 0 ] === '_') {
           return wrapped[ prop ];
         }
         // Return the wrapper method
@@ -250,6 +279,9 @@ const wrapper = (element) => {
  * @returns {Proxy<function()>}
  */
 const methodWrapper = (element, prop, parentWrapper, parentProp) => {
+  if (typeof prop === 'symbol') {
+    return element[ prop ];
+  }
   const propNormalized = prop.replace (/_/g, '-');
   const f              = (...args) => {
     const r = pluginCallback (parentWrapper, parentProp ? `${ parentProp }.${ prop }` : prop, args);

@@ -27,13 +27,13 @@ export default function install (gySVG, gySVGObject) {
         let prevMatrix = {};
         const check    = () => {
           const currentMatrix = svg.getScreenCTM ();
-          if (
+          if (currentMatrix !== null && (
             currentMatrix.a !== prevMatrix.a ||
             currentMatrix.b !== prevMatrix.b ||
             currentMatrix.c !== prevMatrix.c ||
             currentMatrix.d !== prevMatrix.d ||
             currentMatrix.e !== prevMatrix.e ||
-            currentMatrix.f !== prevMatrix.f
+            currentMatrix.f !== prevMatrix.f)
           ) {
             const callbacks = resizeObserverCache.get (svg);
             for (let cb of callbacks) {
