@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Title</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.28.0/themes/prism-tomorrow.min.css"
+        integrity="sha512-vswe+cgvic/XBoF1OcM/TeJ2FW0OofqAVdCZiEYkd6dwGXthvkSFWOoGGJgS2CW70VK5dQM5Oh+7ne47s74VTg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"/>
+  <style>
+    html, body {
+      margin : 0;
+    }
+
+    #case {
+      margin-top    : 1em;
+      margin-bottom : 1em;
+    }
+
+    input, select {
+      font-family  : monospace;
+      outline      : 0;
+      border-width : 0 0 1px;
+      border-color : grey
+    }
+
+    input:focus, select:focus {
+      border-color : black
+    }
+
+    input[type=range] {
+      vertical-align : bottom;
+    }
+
+    #events {
+      min-width       : 400px;
+      margin-top      : 2rem;
+      border-collapse : collapse;
+    }
+
+    #events td {
+      border  : 1px solid grey;
+      padding : 0.3rem;
+      margin  : 0;
+    }
+
+    pre#code {
+      background-color : #282c34;
+      color            : #f0f0f0;
+      padding          : 1.25rem 1.5rem 1.25rem 1.5rem;
+      line-height      : 1.25rem;
+      border-radius    : 6px;
+      left             : 0;
+    }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.28.0/prism.min.js"
+          integrity="sha512-RDQSW3KoqJMiX0L/UBgwBmH1EmRYp8LBOiLaA8rBHIy+7OGP/7Gxg8vbt8wG4ZYd29P0Fnoq6+LOytCqx3cyoQ=="
+          crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.28.0/components/prism-markup.min.js"
+          integrity="sha512-/CPGUG1Yf4H4MevEWW2UadsqREnbDcxefkmf8nyhV2HeUyRLlASWXEVlQ/EaVeJtRolHGg+izRBbDC4+lY/srg=="
+          crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.28.0/components/prism-javascript.min.js"
+          integrity="sha512-jwrwRWZWW9J6bjmBOJxPcbRvEBSQeY4Ad0NEXSfP0vwYi/Yu9x5VhDBl3wz6Pnxs8Rx/t1P8r9/OHCRciHcT7Q=="
+          crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.28.0/components/prism-css.min.js"
+          integrity="sha512-Jv/EO8zjSyqIDa2S0YjCGFY+mEROxud6g7AhfA0KcggjdzhPBhoRyetxV7G7/dnfBdZBzcOvpRn1K+J6sn3jyw=="
+          crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+</head>
+<body>
+
+<div id="description"></div>
+
+<div id="case"></div>
+
+<pre id="code"></pre>
+
+<table id="events" style="display: none; border: 1px solid grey;">
+  <caption><strong>events</strong></caption>
+  <thead>
+    <tr>
+      <td colspan="4"><label><input type="checkbox" id="includeMouse"> include verbose touch/mouse events</label>
+        <button style="float: right" id="clear">clear</button>
+      </td>
+    </tr>
+    <tr>
+      <th id="th-time"><strong>time</strong></th>
+      <th id="th-type"><strong>type</strong></th>
+      <th id="th-target"><strong>target</strong></th>
+      <th id="th-detail"><strong>detail</strong></th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
+<script type="module">
+
+  // Global function
+  window.updateAttribute = (selector, attribute, value) => document.querySelector(selector).setAttribute(attribute, value);
+  window.updateStyle     = (selector, variable, value) => document.querySelector(selector).style.setProperty(variable, value);
+  window.updateProperty  = (selector, property, value) => document.querySelector(selector)[property] = value;
+  window.setImmediate    = (f) => setTimeout(f, 10);
+
+  // Query string analysis
+  const queryString     = new URLSearchParams(window.location.search);
+  const impURL          = queryString.getAll('imp');
+  const libURL          = queryString.getAll('lib');
+  const caseURL         = queryString.get('case');
+  const showDescription = queryString.get('description');
+
+  (async function main () {
+    await loadModules(impURL);
+    await loadLibraries(libURL);
+    await loadCase(caseURL);
+  })();
+
+  /**
+   * Import modules
+   * @param {[string]} impURL
+   * @returns {Promise<void>}
+   */
+  async function loadModules (impURL) {
+    for (let imp of impURL) {
+      await import(imp)
+        .catch((e) => {
+          document.querySelector('#case').innerHTML = `Error loading ${caseURL}<br/>${e.message}`;
+        });
+    }
+  }
+
+  /**
+   * Import library
+   * @param {[string]} libURL
+   * @returns {Promise<Awaited<unknown>[]>}
+   */
+  async function loadLibraries (libURL) {
+    const promises = []
+    for (let lib of libURL) {
+      promises.push(new Promise((resolve) => {
+        const script  = document.createElement('script');
+        script.src    = lib;
+        script.async  = false;
+        script.onload = () => resolve();
+        document.querySelector('head').appendChild(script);
+      }));
+    }
+    return Promise.all(promises);
+  }
+
+  /**
+   * Import case
+   * @param {string} caseURL
+   * @returns {Promise<*>}
+   */
+  async function loadCase (caseURL) {
+    if (caseURL) {
+      return import(caseURL)
+        .then(({default: caseFunction, description, code, events, script}) => {
+
+          // Case function
+          const source                              = getValue(caseFunction);
+          document.querySelector('#case').innerHTML = removeFields(source);
+
+          // Description (optional)
+          if (showDescription) {
+            document.querySelector('#description').innerHTML = getValue(description);
+          }
+
+          // Script and result
+          const codeScript = typeof script === 'function' ?
+                             '\n<script>' + script.toString().replace(/function (.*){/, '').replace(/}(.*)$/, '') + '<' + '/script>' :
+                             '';
+
+          // Source code (optional)
+          const sourceCode = getValue(code || (source + codeScript));
+          if (sourceCode) {
+            document.querySelector('#code').innerHTML = prepareCode(sourceCode);
+          } else {
+            document.querySelector('#code').hidden = true;
+          }
+
+          // If the option "event" is activated (optional)
+          if (events) {
+            document.querySelector('#clear').addEventListener('click', () => {
+              document.querySelector('#events tbody').innerHTML = '';
+            });
+            document.querySelector('#events').style.display = '';
+            getAllEvents(
+              document.querySelector('#case > *'),
+              document.querySelector('#events tbody'),
+              events
+            );
+          }
+
+          if (typeof script === 'function') {
+            setImmediate(script);
+          }
+        })
+        .catch((e) => {
+          document.querySelector('#case').innerHTML = `Error loading ${caseURL}<br/>${e.message}`;
+        });
+    }
+  }
+
+  /**
+   * Capture all events for an element and show the result into a table
+   * @param {object} element
+   * @param {table} table
+   */
+  function getAllEvents (element, table, events) {
+    ['render', 'ready', 'refresh', 'update',
+     'abort', 'animationend', 'animationiteration', 'animationstart', 'auxclick', 'beforecopy',
+     'beforecut', 'beforepaste', 'beforexrselect', 'blur', 'cancel', 'canplay', 'canplaythrough',
+     'change', 'click', 'close', 'contextmenu', 'copy', 'cuechange', 'cut', 'dblclick', 'drag', 'dragend',
+     'dragenter', 'dragleave', 'dragover', 'dragstart', 'drop', 'durationchange', 'emptied', 'ended',
+     'error', 'focus', 'formdata', 'fullscreenchange', 'fullscreenerror', 'gotpointercapture', 'input',
+     'invalid', 'keydown', 'keypress', 'keyup', 'load', 'loadeddata', 'loadedmetadata', 'loadstart',
+     'lostpointercapture', 'mousedown', 'mouseenter', 'mouseleave', 'mousemove', 'mouseout',
+     'mouseover', 'mouseup', 'mousewheel', 'paste', 'pause', 'play', 'playing', 'pointercancel',
+     'pointerdown', 'pointerenter', 'pointerleave', 'pointermove', 'pointerout', 'pointerover',
+     'pointerrawupdate', 'pointerup', 'progress', 'ratechange', 'reset', 'resize', 'scroll', 'search',
+     'seeked', 'seeking', 'select', 'selectionchange', 'selectstart', 'stalled', 'submit', 'suspend',
+     'timeupdate', 'touchcancel', 'touchend', 'touchmove', 'touchstart', 'toggle', 'transitioncancel',
+     'transitionend', 'transitionrun', 'transitionstart', 'volumechange', 'waiting', 'wheel', 'refresh',
+     ...(Array.isArray(events) ? events : [])
+    ].forEach(e => element.addEventListener(e, capture));
+
+    function capture (evt) {
+      if (!document.querySelector('#includeMouse').checked &&
+          ['gotpointercapture', 'lostpointercapture', 'mousedown', 'mouseenter', 'mouseleave', 'mousemove',
+           'mouseout', 'mouseover', 'mouseup', 'mousewheel', 'pointercancel', 'pointerdown', 'pointerenter',
+           'pointerleave', 'pointermove', 'pointerout', 'pointerover', 'pointerrawupdate', 'pointerup',
+           'touchcancel', 'touchend', 'touchmove', 'touchstart'].includes(evt.type)) {
+        return;
+      }
+      let td;
+      const tr     = document.createElement('tr');
+      td           = document.createElement('td');
+      td.innerHTML = getTime();
+      tr.append(td);
+      td           = document.createElement('td');
+      td.innerHTML = evt.type;
+      tr.append(td);
+      td           = document.createElement('td');
+      td.innerHTML = evt.target.tagName.toLowerCase();
+      tr.append(td);
+      td           = document.createElement('td');
+      td.innerHTML = JSON.stringify(evt.detail);
+      tr.append(td);
+      table.insertBefore(tr, table.firstChild);
+    }
+  }
+
+  /**
+   * Returns a value from a function or a raw value.
+   * If the parameter is undefined, returns a string.
+   * @param {*} el
+   * @returns {*}
+   */
+  function getValue (el) {
+    if (typeof el === 'function') {
+      return el();
+    }
+    if (typeof el === 'undefined') {
+      return '';
+    }
+    return el;
+  }
+
+  /**
+   * Remove fields defined with $[...] and use only the value
+   * @param {string} code
+   * @returns {string}
+   */
+  function removeFields (code) {
+    if (!code) {
+      return '';
+    }
+    const interactive = code.match(/\$\[.*?\]/g) || [];
+    (code.match(/\$\[.*?\]/g) || []).forEach((a, i) => {
+      const attr   = interactive[i];
+      const config = string2object(attr.substring(2, attr.length - 1));
+      const value  = config.attribute && config.type === 'boolean' ?
+                     `${config.value ? config.attribute : ''}` :
+                     config.value;
+      code         = code.replace(a, value);
+    });
+    return code;
+  }
+
+  /**
+   * Highlight code with Prism and include the fields defined with $[...]
+   * @param {string} code
+   * @returns {string}
+   */
+  function prepareCode (code) {
+    if (!code) {
+      return '';
+    }
+    const interactive = code.match(/\$\[.*?\]/g) || [];
+    let highlight     = Prism.highlight(code, Prism.languages.html, 'html');
+    (highlight.match(/((\$\[.*?\])|(\$<span class="token punctuation">\[.*?\]<\/span>))/g) || []).forEach((a, i) => {
+      const attr   = interactive[i];
+      const config = string2object(attr.substring(2, attr.length - 1));
+      const code   = build(config);
+      highlight    = highlight.replace(a, code);
+    });
+    return highlight;
+  }
+
+  /**
+   * Return an object from a string with format "key: value, key: value" (separated by , or ;)
+   * @param value
+   * @returns {undefined|any}
+   */
+  function string2object (value) {
+    if (typeof value === 'string') {
+      try {
+        const normalized = value
+          .split(/((?:[^;^,"']|"[^"]*"|'[^']*')+)/)
+          .filter(partial => !['', ';', ','].includes(partial.trim()))
+          .map(partial => [partial.substring(0, partial.indexOf(':')), partial.substring(partial.indexOf(':') + 1)])
+          .map(partial => `"${partial[0].trim()}": ${
+            partial[1].indexOf('|') !== -1 ?
+            `[${partial[1].split('|').map(p => `"${p.trim()}"`).join(',')}]` :
+            str2value(partial[1].trim())
+          }`)
+          .join(',');
+        return JSON.parse(`{${normalized}}`);
+      } catch (err) {
+        console.error(err, value);
+        return undefined;
+      }
+    } else if (typeof value === 'object') {
+      return value;
+    }
+    return undefined;
+  }
+
+  /**
+   * Build a input from a $[...] configuration
+   * @param {object} config
+   * @returns {string}
+   */
+  function build (config) {
+    switch (config.type) {
+      case 'text':
+        return buildText(config);
+      case 'options':
+        return buildOptions(config);
+      case 'range':
+        return buildRange(config);
+      case 'boolean':
+        return buildBoolean(config);
+      case 'button':
+        return buildButton(config);
+      default:
+        console.error('inline data type unknown', config);
+    }
+  }
+
+  /**
+   * Returns the action string
+   * @param {object} config
+   * @returns {string}
+   */
+  function getAction (config) {
+    return (
+      config.attribute ?
+      `updateAttribute('${config.selector}', '${config.attribute}', this.value)` :
+      config.style ?
+      `updateStyle('${config.selector}', '${config.style}', this.value)` :
+      config.property ?
+      `updateProperty('${config.selector}', '${config.property}', this.value)` :
+      ''
+    );
+  }
+
+  /**
+   * Returns the id
+   * @param {object} config
+   * @returns {string}
+   */
+  function getId (config) {
+    return config.id || `_${config.attribute || config.style || config.property}`;
+  }
+
+  /**
+   * Returns a text input
+   * @param {object} config
+   * @returns {string}
+   */
+  function buildText (config) {
+    return `<input type="text" id="${getId(config)}"
+        value      ="${config.value}"
+        oninput    ="${getAction(config)}"
+        onkeypress = "setImmediate(()=>this.style.width = ((this.value.length || 1) * 7.34) + 'px');"
+        onpaste    = "setImmediate(()=>this.style.width = ((this.value.length || 1) * 7.34) + 'px');"
+        style      ="width: ${(String(config.value).length || 1) * 7.34}px;"
+      />`;
+  }
+
+  /**
+   * Returns a select
+   * @param {object} config
+   * @returns {string}
+   */
+  function buildOptions (config) {
+    return `<select id="${getId(config)}"
+        oninput   ="${getAction(config)}">
+        ${config.values.map(o => `<option ${o === config.value ?
+                                            'selected' :
+                                            ''}
+        >${o}</option>`).join('')}
+      </select>`;
+
+  }
+
+  /**
+   * Returns am input range
+   * @param {object} config
+   * @returns {string}
+   */
+  function buildRange (config) {
+    return `<label style="display: inline-block; width: ${String(config.max).length * 7.34}px;">${config.value}</label><input type="range" id="${getId(config)}"
+        ${typeof config.value !== 'undefined' ? `value="${config.value}"` : ''}
+        ${typeof config.min !== 'undefined' ? `min="${config.min}"` : ''}
+        ${typeof config.max !== 'undefined' ? `max="${config.max}"` : ''}
+        ${typeof config.step !== 'undefined' ? `step="${config.step}"` : ''}
+        oninput   ="${getAction(config)} || (this.previousElementSibling.innerHTML = this.value)">`;
+
+  }
+
+  /**
+   * Returns a select for a boolean attribute
+   * @param {object} config
+   * @returns {string}
+   */
+  function buildBoolean (config) {
+    return `<select id="${getId(config)}"
+        oninput   ="this.value ? document.querySelector('${config.selector}').setAttribute('${config.attribute}', '') : document.querySelector('${config.selector}').removeAttribute('${config.attribute}')">
+        <option ${config.value ? 'selected' : ''}>${config.attribute}</option>
+        <option ${!config.value ? 'selected' : ''}></option>
+      </select>`;
+
+  }
+
+  /**
+   * Returns a text input
+   * @param {object} config
+   * @returns {string}
+   */
+  function buildButton (config) {
+    return `<button id="${getId(config)}" onclick="${config.action}.call(this, document.querySelector('${config.selector.trim()}'))">${config.text}</button>`;
+  }
+
+
+  /**
+   * Return a time with the format HH:MM:SS.mmm
+   * @param date
+   * @returns {string}
+   */
+  function getTime (date = new Date()) {
+    return `${
+      date.getHours().toString().padStart(2, '0')
+    }:${
+      date.getMinutes().toString().padStart(2, '0')
+    }:${
+      date.getSeconds().toString().padStart(2, '0')
+    }.${
+      date.getMilliseconds().toString().padStart(3, '0')
+    }`;
+  }
+
+  /**
+   *
+   * @param {*} val
+   * @returns {Date|boolean|null|number|undefined|*}
+   */
+  function str2value (val) {
+    if (val === 'true') return true;
+    if (val === 'false') return false;
+    if (val === 'null') return null;
+    if (val === 'undefined') return undefined;
+    if (!Number.isNaN(+val)) return +val;
+    if (!Number.isNaN((new Date('true')).getTime())) return new Date(val);
+    return `"${val}"`;
+  }
+
+</script>
+</body>
+</html>

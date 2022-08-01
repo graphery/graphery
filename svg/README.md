@@ -1,7 +1,7 @@
 # ![graphery](https://cdn.graphery.online/img/gy.svg) Graphery SVG - gySVG
 
-A excellent library to easily create and manipulate SVG in Javascript. Based on the proxy, it 
-offers a simple API, very close to the native structure of SVG.
+An excellent library for easily creating and manipulating SVG in Javascript. It offers a simple API, very close to the 
+native SVG structure, powerful support for animations, tiny size, and fast speed.
 
 See the complete documentation in <https://www.graphery.org/svg/>
 
@@ -13,7 +13,6 @@ See the complete documentation in <https://www.graphery.org/svg/>
     -   [API style: method chaining](#api-style-method-chaining)
     -   [Browser support](#browser-support)
     -   [Framework support](#framework-support)
-    -   [Server-side rendering](#server-side-rendering)
     -   [Extensible](#extensible)
 
 -   [Load](#load)
@@ -23,25 +22,28 @@ See the complete documentation in <https://www.graphery.org/svg/>
 
 ## Introduction
 
-**Graphery SVG** (**gySVG**) is a tiny, fast, and powerful library to simplify the construction and
-manipulation of SVG graphs from Javascript.
+**Graphery SVG** (**gySVG**) is a powerful library to simplify the construction and manipulation of SVG graphics from 
+Javascript.
 
--   **Tiny**: the minimized library size is less than 3 KB, and this value can be reduced to 1.5 KB
-    with gzip.
+-   **Simple**: the API is very close to the SVG structure. It is straightforward to use. If you know the SVG format, you 
+    know Graphery SVG API. If you learn Graphery API, you learn SVG format.
 
--   **Fast**: benchmarking with the excellent SVG.JS library is very good. For the same process, gySVG
-    takes 20ms and SVG.js more than 40ms.
+-   **Fast**: the performance in comparison with other libraries is excellent. For the same process, Graphery SVG takes 50% 
+    of the time than others.
+      
 
--   **Powerful**: you can use all attributes, properties, and methods of SVG versions 1.0, 1.1, and 
-    2.0. The API is straightforward and very close to the SVG structure.
+-   **Tiny**: the minimized size of the library is &lt;5KB uncompressed and &lt;3KB gzipped. No external dependencies, all in 
+    one.
+
+-   **Powerful**: can use all attributes, properties, and methods of SVG 1.0, 1.1, and 2.0 versions. In addition, you can 
+    use the DOM properties and methods. You can extend the core features with plugins.
 
 ### Goal: reduce code complexity
 
-**Why** a new SVG library? In the Graphery projects, we have intensively created and manipulated 
-SVG graphics from Javascript. After evaluating all SVG libraries, we were aware of the need to 
-build a new library much smaller, faster, and closer to the SVG format. The result is gySVG, a 
-simple library that provides an easy way to work with SVG without penalizing the project 
-performance or size.
+Why a new SVG library? We have intensively created and manipulated SVG graphics from Javascript in our projects. 
+After evaluating all SVG libraries, we were aware of the need to build a new library much smaller, faster, and closer 
+to the SVG format. The result is Graphery SVG, a simple library that provides an easy way to work with SVG without 
+penalizing the project performance or size.
 
 The Javascript source code for creating and manipulating SVG elements tends to grow and becomes
 challenging to understand and maintain code. Creating a simple SVG requires many lines of code 
@@ -62,8 +64,8 @@ rect.setAttribute('fill', '#F06');
 svg.appendChild(rect);
 ```
 
-gySVG simplifies the creation and manipulation through a set of very light methods that fit SVG
-DOM attributes, properties, and methods. This is the equivalent code write with gySVG:
+Graphery SVG simplifies the creation and manipulation through very light methods that fit SVG
+DOM attributes, properties, and methods. The equivalent code written with Graphery SVG is:
 
 ```js
 const svg = gySVG().width('100px').height('100px');
@@ -73,17 +75,20 @@ svg.attachTo('#drawing');
 
 The result is an entirely valid SVG that can be used without limitations as part of the HTML DOM.
 
-
+```xml
+<svg viewBox="0,0,100,100" width="100px" height="100px">
+  <rect x="10" y="10" width="90" height="90" fill="#f06"></rect>
+</svg>
+```
 
 ### API style: method chaining
 
-In gySVG, all are methods, thus, when you want to work with SVG attributes or properties, you
+In Graphery SVG, all are methods; thus, when you want to work with SVG attributes or properties, you
 must use methods. For example, set an `id` to an SVG element is `element.id('unique_id')` and
-for getting this identification it's necessary to use `element.id()`.
+for getting this identification it is necessary to use `element.id()`.
 
-gySVG builds dynamically by proxies the methods, and these methods can be chained together to 
-simplify successive calls. Each call returns the original wrapper, and you can include one call 
-after another.
+Graphery SVG dynamically constructs the methods, which can chain together to make successive calls. Each call returns 
+the original object and can include one call after another.
 
 ```js
 const svg = gySVG()
@@ -103,11 +108,10 @@ calls.
 
 ### Browser support
 
-The magic of gySVG is the use of `Proxy`, one of the most powerful features of ES6. Javascript's
-proxies allow creating the wrappers dynamically for each SVG element, reduce the library's 
-size, and keep the performance.
+The magic of Graphery SVG is the use of `Proxy`, one of the most powerful features of ES6. Javascript's proxies allow 
+the wrapper creation for each SVG element, reduce the library's size, and keep the performance.
 
-Proxy is supported by:
+Javascript Proxy, and as a result, Graphery SVG is supported by:
 
 -   Microsoft Edge 12, and later
 -   Firefox 18, and later
@@ -115,32 +119,16 @@ Proxy is supported by:
 -   Safari 10 desktop and mobile, and beyond
 -   Opera 36, and later
 
-`Proxy` is not supported by Internet Explorer 11 (and it's not possible to use polyfills or 
-transpilers for this feature). If you need compatibility with old browsers, use other excellent 
-libraries as:
-
--   [svg.js](https://svgjs.com/) 
--   [snap.svg](http://snapsvg.io/).
-
 ### Framework support
 
-This library can be used from vanilla Javascript and frameworks like React, Vue, Svelte, Stencil, or
-Angular. gySVG is agnostic to the frameworks; it always works on the SVG element. If your
-framework covers SVG elements, you should keep in mind that gySVG only works with native elements.
-
-### Server-side rendering
-
-gySVG is ready to work both on the client and the server. This library is tested with 
-[Node](https://nodejs.org/) and [JSDom](https://github.com/jsdom/jsdom) for server-side 
-rendering (SSR). You can put the SVG generated into the DOM or obtain the SVG code directly 
-with `svg.source()`. 
+This library can be used from vanilla Javascript and frameworks like React, Vue, Svelte, Stencil, or Angular. Graphery 
+SVG is agnostic to the frameworks; it always works on the SVG. If your framework covers SVG elements, you 
+should remember that Graphery SVG only works with native SVG elements.
 
 ### Extensible
 
-Although the functionality of gySVG is extensive, there are always some features that are not 
-available from the beginning. This library can be extended with new functionality by 
-[plugins](https://www.graphery.org/svg/16-Plugins.html). In that guide, you will see some examples and learn how to create your 
-extension step by step.  
+Although the functionality of Graphery SVG is extensive, there are always some features that are not 
+available from the beginning. This library can be extended with new functionality by plugins.  
 
 ## Load
 
@@ -148,10 +136,10 @@ extension step by step.
 
 #### Import module
 
-The easiest way to use gySVG library is to import it as an ES module from our CDN service:
+The easiest way to use Graphery SVG library is to import it as an ES module from our CDN service:
 
 ```js
-import gySVG from 'https://cdn.graphery.online/0.1.5/svg/module/index.js';
+import gySVG from 'https://cdn.graphery.online/svg/1.0.0/module/index.js';
 ```
 
 #### script source
@@ -159,19 +147,19 @@ import gySVG from 'https://cdn.graphery.online/0.1.5/svg/module/index.js';
 Another way, very easy too, is to load the script version from our CDN with a tag `<script>`:
 
 ```html
-<script src="https://cdn.graphery.online/0.1.5/svg/script/index.js"></script>;
+<script src="https://cdn.graphery.online/svg/1.0.0/script/index.js"></script>;
 ```
 
 #### Understanding the URL from CDN
 
 This is the detailed description about CDN URL:
 
-     https://cdn.graphery.online/0.1.5/svg/module/index.js
-    |------|--------------------|-----|---|------|--------|
-        |            |             |    |     |       |------> file name
-        |            |             |    |     |--------------> 'module' or 'script' mode
-        |            |             |    |--------------------> library name
-        |            |             |-------------------------> version
+     https://cdn.graphery.online/svg/1.0.0/module/index.js
+    |------|--------------------|---|-----|------|--------|
+        |            |            |    |      |       |------> file name
+        |            |            |    |      |--------------> 'module' or 'script' mode
+        |            |            |    |---------------------> version
+        |            |            |--------------------------> library name
         |            |---------------------------------------> CDN domain
         |----------------------------------------------------> protocol (please, use 'https')
 

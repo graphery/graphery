@@ -1,31 +1,142 @@
 const NAME         = 'gySVGObject';
 const NS           = 'http://www.w3.org/2000/svg';
+const SVG          = 'svg';
 const OBJECT       = 'object';
 const FUNCTION     = 'function';
 const STRING       = 'string';
+const BOOLEAN      = 'boolean';
 const UNDEFINED    = 'undefined';
-const EMPTY        = '';
-const cache        = new WeakMap ();
-const readonlyProp = new Set ();
+const SYMBOL       = 'symbol';
+const PATH         = 'path';
+const ANIMATE      = 'animate';
+const FILL         = 'none';
+const FREEZE       = 'freeze';
+const D            = 'd';
+const TRANSFORM    = 'transform';
+const ROTATE       = 'rotate';
+const TRANSLATE    = 'translate';
+const OFFSET       = 'offset';
+const INHERIT      = 'inherit';
+const FINISHED     = 'finished';
+const EMPTY_STRING = '';
+const COMA         = ',';
+const DEG_TYPES    = [ROTATE, 'skewX', 'skewY'];
+const DEG          = 'deg';
+const PX           = 'px';
+const MS           = 'ms';
+const cache        = new WeakMap();
+const readonlyProp = new Set();
+
+/**
+ * Reduce Motion flag
+ * @type {boolean}
+ */
+let reduceMotion = false;
+if (window.matchMedia) {
+  const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+  reduceMotion     = mediaQuery.matches;
+  mediaQuery.addEventListener('change', () => {
+    reduceMotion = mediaQuery.matches;
+  });
+}
+
+/**
+ * Check if is direct access member
+ * @param {string} prop
+ * @returns {boolean}
+ */
+const directAccess = (prop) => 'el' === prop || prop[0] === '_' || isType(prop, SYMBOL);
+
+/**
+ * Check the type
+ * @param {object} o
+ * @param {string} t
+ * @returns {boolean}
+ */
+const isType = (o, t) => typeof o === t;
+
+/**
+ * Check the instance
+ * @param {object} o
+ * @param {object} p
+ * @returns {boolean}
+ */
+const is = (o, p) => o instanceof p;
+
+
+/**
+ * Create a random id
+ * @returns {string}
+ */
+const randomId = () => NAME + Math.random().toString(32).substring(2);
+
+/**
+ * Check if the element is wrapped or not
+ * @param {*} el
+ * @returns {boolean}
+ */
+const isWrapped = (el) => isType(el, OBJECT) && el !== null && el[Symbol.toStringTag] === NAME;
+
+/**
+ * Create a new element
+ * @param tag
+ * @returns {gySVGObject}
+ */
+const create = (tag) => wrapper(document.createElementNS(NS, tag));
+
+/**
+ * Create, wrap or return the wrapped object
+ * @param {gySVGObject|object|string} tag
+ * @returns {gySVGObject|object}
+ */
+const createWrap = (tag) =>
+  isType(tag, STRING) ?
+    create(tag) :
+    isType(tag, OBJECT) && tag !== null ?
+      isWrapped(tag) ?
+        tag :
+        wrapper(tag) :
+      tag;
+
+/**
+ * Return the original method name for an alias
+ * @param {string} prop
+ * @returns {string}
+ */
+const alias = (prop) => ({
+  content : 'innerHTML',
+  source  : 'outerHTML',
+  parent  : 'parentElement',
+  next    : 'nextElementSibling',
+  previous: 'previousElementSibling'
+})[prop] || prop;
+
+
+/**
+ * Convert property name to attribute with hyphens
+ * @param {string} name
+ * @returns {string}
+ */
+const toHyphen = name => name.replace(/([A-Z])/g, '-$1').toLowerCase();
 
 /**
  * @typedef {Object} gySVGObject
  */
 
 /**
- * gySVGObject
+ * GYSVGObject
  */
-class gySVGObject {
+class GYSVGObject {
+
   constructor (element) {
-    this._el       = element;
-    this._animates = [];
-    this._timeouts = [];
+    this._el   = element;
+    this.gySVG = gySVG;
   }
-  
-  get [ Symbol.toStringTag ] () {
+
+  get [Symbol.toStringTag] () {
     return NAME;
   }
-  
+
   /**
    * el
    * @type {Object}
@@ -33,36 +144,46 @@ class gySVGObject {
   get el () {
     return this._el;
   }
-  
+
   /**
    * @param {gySVGObject|Object|string} tag
    * @returns {gySVGObject}
    */
   add (tag) {
-    let r = type (tag, STRING) ?
-      create (tag) :
-      isWrapped (tag) ?
-        tag :
-        wrapper (tag);
-    this._el.appendChild (r._el);
+    let r = createWrap(tag);
+    if (r) {
+      this._el.appendChild(r._el);
+    }
     return r;
   }
-  
+
+  /**
+   * @param {gySVGObject|Object|string} tag
+   * @returns {gySVGObject}
+   */
+  addBefore (tag) {
+    let r = createWrap(tag);
+    if (r) {
+      this._el.insertBefore(r._el, this._el.firstChild || null);
+    }
+    return r;
+  }
+
   /**
    * @param {string|Object} tag
    * @returns {gySVGObject}
    */
   attachTo (tag) {
-    const r = type (tag, OBJECT) ?
-      (isWrapped (tag) ?
+    const r = isType(tag, OBJECT) ?
+      (isWrapped(tag) ?
           tag._el :
           tag
       ) :
-      document.querySelector (tag);
-    r.appendChild (this._el);
+      document.querySelector(tag);
+    r.appendChild(this._el);
     return this;
   }
-  
+
   /**
    * gySVGObject.id()
    * @param {string} [value]
@@ -70,176 +191,267 @@ class gySVGObject {
    */
   id (value) {
     if (!value) {
-      return this._el.id || (this._el.id = randomId ());
+      return this._el.id || (this._el.id = randomId());
     }
-    this._el.setAttribute ('id', value);
+    this._el.setAttribute('id', value);
     return this;
   }
-  
+
   /**
    * gySVGObject.ref()
    * @returns {string}
    */
   ref () {
-    return `#${ this.id () }`;
+    return `#${this.id()}`;
   }
-  
+
   /**
    * gySVGObject.url()
    * @returns {string}
    */
   url () {
-    return `url(#${ this.id () })`;
+    return `url(${this.ref()})`;
   }
-  
+
   /**
-   * @param {Object} attributes
-   * @param {number} duration
-   * @param {Function} [start]
-   * @param {Function} [end]
+   * @param {object|array<object>} keyframes
+   * @param {number|object} [options]
+   * @param {function|null} [startCallback]
+   * @param {function|null} [endCallback]
    * @return {gySVGObject}
+   * Notice: the original animateTo method is overwriting for this plugin
    */
-  animateTo (attributes, duration = 200, start, end) {
-    const animates  = this._animates;
-    const timeouts  = this._timeouts;
-    const clean     = () => {
-      timeouts.forEach (t => clearTimeout (t));
-      timeouts.length = 0;
-      animates.forEach (e => e.remove ());
-      animates.length = 0;
+  animateTo (keyframes, options = {duration: 200}, startCallback = null, endCallback = null) {
+
+    /**
+     * Fixed and configure default values for .animateTo() options
+     * @param {object} opts
+     * @returns {object}
+     */
+    const normalizeOptions = (opts) => {
+      const normalizedConfig = isType(opts, OBJECT) ? Object.assign({}, opts) : {duration: opts};
+      if (reduceMotion) {
+        normalizedConfig.duration = 0;
+      }
+      normalizedConfig.fill = FILL;
+      return normalizedConfig;
+    }
+
+    /**
+     * Transform and configure default values for .animate() keyframes. Detect unsupported attributes.
+     * @param {object|[{}]} originalKeyframes
+     * @returns {[{}]}
+     */
+    const normalizeKeyframes = (originalKeyframes) => {
+      originalKeyframes     = is(originalKeyframes, Array) ? originalKeyframes : [originalKeyframes];
+      const computedStyle   = window.getComputedStyle(this._el);
+      const normalizeFrames = [];
+      const alternativeKeys = new Set();
+      for (let keyframe of originalKeyframes) {
+        const normalized = Object.assign({}, keyframe);
+        for (let key in normalized) {
+          if (!(key in computedStyle)) {
+            alternativeKeys.add(key);
+          } else if (key === D) {
+            normalized.d = `${PATH}("${normalized.d}")`
+          } else if (key === TRANSFORM) {
+            normalized.transform = transform(normalized.transform)
+          }
+        }
+        normalizeFrames.push(normalized);
+      }
+      addAlternatives(alternativeKeys, normalizeFrames);
+      return normalizeFrames;
+    }
+
+    const alternatives    = []
+    /**
+     * create SMIL animate as alternative
+     * @param {Set} keys
+     * @param {[{}]} normalizeFrames
+     */
+    const addAlternatives = (keys, normalizeFrames) => {
+      if (keys.size) {
+        const computedFrames = new KeyframeEffect(null, normalizeFrames).getKeyframes();
+        const initialTime    = this.closest(SVG).getCurrentTime() * 1000;
+        for (let key of keys) {
+          const altAnimate = gySVG(ANIMATE)
+            .attributeName(key)
+            .dur(config.duration + MS)
+            .begin((0 | initialTime + (options.delay || 0)) + MS)
+            .fill(FREEZE);
+          if (normalizeFrames.length === 1) {
+            altAnimate.to(normalizeFrames[0][key]);
+          } else {
+            const keyTimes = [];
+            const values   = [];
+            for (let n in computedFrames) {
+              const frame = computedFrames[n];
+              if (key in normalizeFrames[n]) {
+                keyTimes.push(frame.computedOffset);
+                values.push(normalizeFrames[n][key]);
+              }
+            }
+            if (keyTimes[0] !== 0) {
+              keyTimes.unshift(0);
+              values.unshift(this[key]() || INHERIT);
+            }
+            if (keyTimes[keyTimes.length - 1] !== 1) {
+              keyTimes.push(1);
+              values.push(this[key]() || INHERIT);
+            }
+            altAnimate.keyTimes(keyTimes.join(';')).values(values.join(';'));
+          }
+          alternatives.push(altAnimate);
+          altAnimate.attachTo(this)
+        }
+      }
     };
-    const transform = (event = true) => {
-      clean ();
-      for (let attr of Object.keys (attributes)) {
-        this[ attr ] (attributes[ attr ]);
+
+    /**
+     * Normalize a transform property
+     * @param {object|string} property
+     * @returns {string|*}
+     */
+    const transform = (property) => {
+      if (isType(property, STRING)) {
+        property = JSON.parse('{' +
+                              property
+                                .replace(/\s*\(\s*/g, ':[')
+                                .replace(/\s*\)\s*/g, '],')
+                                .split(/\s*,\s*|\s.*/).join(',')
+                                .replace(/(\w+):/g, '"$1":')
+                                .replace(/,$/, '')
+                              + '}');
       }
-      if (typeof end === 'function') {
-        end(this);
+      let result = EMPTY_STRING;
+      for (let key in property) {
+        if (key === ROTATE) {
+          const values = transformValue(property[key]);
+          if (values.length > 1) {
+            result += `${TRANSLATE}(${values[1]}${PX},${values[2]}${PX}) `
+          }
+          result += `${key}(${values[0]}${transformUnit(key)}) `
+          if (values.length > 1) {
+            result += `${TRANSLATE}(-${values[1]}${PX},-${values[2]}${PX}) `
+          }
+        } else {
+          result += `${key}(${transformValue(property[key]).map(v => v + transformUnit(key)).join(COMA)}) `
+        }
       }
-    };
-    
-    if (duration === 0) {
-      transform (false);
-      return this;
+      return result;
     }
-    
-    clean ();
-    let added = false;
-    for (let attr of Object.keys (attributes)) {
-      if (this[ attr ] () !== attributes[ attr ]) {
-        added         = true;
-        const animate = this.add ('animate')
-          .attributeName (attr)
-          .to (attributes[ attr ])
-          .fill ('freeze')
-          .dur (duration + 'ms');
-        animate.beginElement ();
-        animates.push (animate);
+
+    /**
+     * Create a normalized transform value array
+     * @param {*} value
+     * @returns {[]}
+     */
+    const transformValue = (value) => (is(value, Array) ? value : String(value).split(/\s+|,/));
+
+    /**
+     * Return the transform value
+     * @param {string} type
+     * @returns {string}
+     */
+    const transformUnit = (type) => DEG_TYPES.includes(type) ? DEG : type === TRANSLATE ? PX : EMPTY_STRING;
+
+    /**
+     * Convert to valida attribute value
+     * @param {string|*} value
+     * @returns {string|*}
+     */
+    const value2attribute = (value) =>
+      typeof value === 'string' ?
+        value.replace(/(deg)|(px)/g, EMPTY_STRING).trim() :
+        value
+
+    /**
+     * Transform d CSS property to valid d attribute format
+     * @param {string} d
+     * @returns {string}
+     */
+    const d2attribute = (d) => d
+      .replace(/(path\s*\(\s*["'])|(["']\s*\)\s*$)/g, EMPTY_STRING)
+      .trim()
+      .replace(/([a-zA-Z])\s*/g, '$1')
+      .replace(/\s+/g, COMA);
+
+    // Main code
+    const config    = normalizeOptions(options);
+    const frames    = normalizeKeyframes(keyframes);
+    const animation = this._el.animate(frames, config);
+
+    animation.ready.then(() => isType(startCallback, FUNCTION) && startCallback.call(this, animation));
+
+    animation.finished.then(() => {
+      const lastAttributes = frames[frames.length - 1];
+      for (let attr in lastAttributes) {
+        const attrKey = toHyphen(attr);
+        if (/^text-/.test(attrKey)) {
+          this._el.style[attr] = lastAttributes[attr];
+        } else if (attr !== OFFSET && attr in lastAttributes) {
+          this._el.setAttribute(
+            attrKey,
+            attrKey === 'd' ?
+              d2attribute(lastAttributes[attr]) :
+              value2attribute(lastAttributes[attr]));
+        }
       }
-    }
-    if (added) {
-      if (typeof start === 'function') {
-        start(this);
-      }
-      timeouts.push (setTimeout (transform, duration + 10));
-    }
+      alternatives.forEach(altAnimate => {
+        altAnimate[FINISHED](true);
+        const animates = this._el.querySelectorAll(ANIMATE);
+        const finished = this._el.querySelectorAll(`${ANIMATE}[${FINISHED}]`);
+        if (animates.length === finished.length) {
+          animates.forEach(a => a.remove())
+        }
+      });
+      isType(endCallback, FUNCTION) && endCallback.call(this, animation);
+    });
+
     return this;
   }
-  
 }
 
 /**
  *
- * @param {object} o
- * @param {string} t
- * @returns {boolean}
- */
-const type = (o, t) => typeof o === t;
-
-/**
- *
- * @param {object} o
- * @param {object} p
- * @returns {boolean}
- */
-const is = (o, p) => o instanceof p;
-
-/**
- * randomId()
- * @returns {string}
- */
-const randomId = () => NAME + Math.random ().toString (32).substring (2);
-
-/**
- * isWrapped()
- * @param {*} el
- * @returns {boolean}
- */
-const isWrapped = (el) => typeof el === OBJECT && el[ Symbol.toStringTag ] === NAME;
-
-/**
- *
- * @param tag
+ * @param element
  * @returns {gySVGObject}
  */
-const create = (tag) => wrapper (document.createElementNS (NS, tag));
-
-/**
- * return the original method name for an alias
- * @param {string} prop
- * @returns {string}
- */
-const alias = (prop) => ({
-  content  : 'innerHTML',
-  source   : 'outerHTML',
-  parent   : 'parentElement',
-  next     : 'nextElementSibling',
-  previous : 'previousElementSibling'
-})[ prop ] || prop;
-
-/**
- *
- * @param element
- * @returns {Proxy<gySVGObject>}
- */
 const wrapper = (element) => {
-  if (!type (element, OBJECT) || element === null) {
+  if (!isType(element, OBJECT) || element === null) {
     return null;
   }
-  if (cache.has (element)) {
-    return cache.get (element);
+  if (cache.has(element)) {
+    return cache.get(element);
   }
-  const proxy = new Proxy (
-    new gySVGObject (element),
+  const proxy = new Proxy(
+    new GYSVGObject(element),
     // Handler
     {
       get (wrapped, prop) {
-        // Direct return
-        if (['el', Symbol.toStringTag].includes (prop) || prop[ 0 ] === '_') {
-          return wrapped[ prop ];
+        // Symbol return
+        if (directAccess(prop)) {
+          return wrapped[prop];
         }
         // Return the wrapper method
-        if (!type (wrapped[ prop ], UNDEFINED)) {
+        if (!isType(wrapped[prop], UNDEFINED)) {
           return (...args) =>
-            pluginCallback (proxy, prop, args) ||
-            wrapped[ prop ].call (proxy, ...args);
+            pluginCallback(proxy, prop, args) ||
+            wrapped[prop].call(proxy, ...args);
         }
         // Special case <path d=""></path>
-        if (prop === 'd' && element.tagName.toLowerCase () === 'path') {
-          let content  = EMPTY;
-          const dProxy = new Proxy (
+        if (prop === D && element.tagName.toLowerCase() === PATH) {
+          let content  = EMPTY_STRING;
+          const dProxy = new Proxy(
             (arg) =>
-              pluginCallback (proxy, prop, [arg]) ||
-              arg ? element.setAttribute ('d', arg) || proxy : element.getAttribute ('d'),
+              pluginCallback(proxy, prop, [arg]) ||
+              arg ? element.setAttribute(D, arg) || proxy : element.getAttribute(D),
             {
-              get (target, command) {
+              get (_target, command) {
                 return (...args) => {
-                  content += `${ command }${ pluginCallback (
-                    proxy,
-                    prop,
-                    args
-                  ) || args.join (',') }`;
-                  element.setAttribute (prop, content);
+                  content += pluginCallbackPathD(proxy, command, args) || `${command}${args.join(COMA)}`;
+                  element.setAttribute(prop, content);
                   return dProxy;
                 };
               }
@@ -247,26 +459,26 @@ const wrapper = (element) => {
           );
           return dProxy;
         }
-        prop = alias (prop);
+        prop = alias(prop);
         // Return the element method
-        if (type (element[ prop ], FUNCTION)) {
+        if (isType(element[prop], FUNCTION)) {
           return (...args) => {
             const result =
-                    pluginCallback (proxy, prop, args) ||
-                    element[ prop ].call (element, ...args);
+                    pluginCallback(proxy, prop, args) ||
+                    element[prop].call(element, ...args);
             return (
               result === undefined ?
                 proxy :
-                adaptedResult (result)
+                adaptedResult(result)
             );
           };
         }
         // Return the wrapped method
-        return methodWrapper (element, prop, proxy);
+        return methodWrapper(element, prop, proxy);
       }
     }
   );
-  cache.set (element, proxy);
+  cache.set(element, proxy);
   return proxy;
 };
 
@@ -279,76 +491,70 @@ const wrapper = (element) => {
  * @returns {Proxy<function()>}
  */
 const methodWrapper = (element, prop, parentWrapper, parentProp) => {
-  if (typeof prop === 'symbol') {
-    return element[ prop ];
-  }
-  const propNormalized = prop.replace (/_/g, '-');
+  const propNormalized = prop.replace(/_/g, '-');
   const f              = (...args) => {
-    const r = pluginCallback (parentWrapper, parentProp ? `${ parentProp }.${ prop }` : prop, args);
+    const r = pluginCallback(parentWrapper, parentProp ? `${parentProp}.${prop}` : prop, args);
     if (r !== undefined) {
       return r;
     }
     // Get value
     if (args.length === 0) {
-      const result = (
-        propNormalized in element &&
-        (!element.hasAttribute || !element.hasAttribute (propNormalized))
-      ) ?
-        element[ propNormalized ] :
-        element.getAttribute (propNormalized);
-      return adaptedResult (result);
+      const result = element.hasAttribute && element.hasAttribute(propNormalized) ?
+        element.getAttribute(propNormalized) :
+        element[propNormalized];
+      return adaptedResult(result);
     }
     // Set value as property
-    const value = args[ 0 ];
-    if (is (element, CSSStyleDeclaration)) {
-      element[ propNormalized ] = value;
+    const value = args[0];
+    if (is(element, CSSStyleDeclaration)) {
+      element[propNormalized] = value;
       return parentWrapper;
     }
-    if (propNormalized in element && !readonlyProp.has (propNormalized)) {
-      if (element[ propNormalized ] === value) {
+    if (propNormalized in element && !readonlyProp.has(propNormalized)) {
+      if (element[propNormalized] === value) {
         return parentWrapper;
       }
-      const previousValue = element[ propNormalized ];
+      const previousValue = element[propNormalized];
       try {
-        element[ propNormalized ] = value;
+        element[propNormalized] = value;
       } catch (err) {
-        readonlyProp.add (propNormalized);
+        readonlyProp.add(propNormalized);
       }
       if (
-        (type (element[ propNormalized ], OBJECT) && element[ propNormalized ] === value) ||
-        element[ propNormalized ] !== previousValue
+        (isType(element[propNormalized], OBJECT) && element[propNormalized] === value) ||
+        element[propNormalized] !== previousValue
       ) {
         return parentWrapper;
       }
-      readonlyProp.add (propNormalized);
+      readonlyProp.add(propNormalized);
     }
     // Set value as attribute
     if (value !== 0 && !value) {
-      element.removeAttribute (propNormalized);
+      element.removeAttribute(propNormalized);
     } else {
-      element.setAttribute (propNormalized, String (args));
+      element.setAttribute(propNormalized, isType(value, BOOLEAN) ? '' : String(args));
     }
     return parentWrapper;
   };
-  // Object.defineProperty (f, 'name', {value : propNormalized, configurable : true});
-  return new Proxy (
+  return new Proxy(
     f,
     {
-      get (target2, prop2) {
-        const result = element[ propNormalized ][ prop2 ];
+      get (_target, prop2) {
+        const result = element[propNormalized][prop2];
         return (
-          type (result, FUNCTION) ?
+          isType(result, FUNCTION) ?
             (...args) => {
               const r =
-                      pluginCallback (parentWrapper, `${ prop }.${ prop2 }`, args) ||
-                      result.call (element[ propNormalized ], ...args);
+                      pluginCallback(parentWrapper, `${prop}.${prop2}`, args) ||
+                      result.call(element[propNormalized], ...args);
               return r === undefined ? parentWrapper : r;
             } :
-            methodWrapper (element[ propNormalized ], prop2, parentWrapper, propNormalized)
+            methodWrapper(element[propNormalized], prop2, parentWrapper, propNormalized)
         );
       },
-      set (target2, prop2, value2) {
-        return element[ propNormalized ][ prop2 ] = value2;
+      set (_target, prop2, value2) {
+        element[propNormalized][prop2] = value2;
+        return true;
       }
     }
   );
@@ -361,14 +567,14 @@ const methodWrapper = (element, prop, parentWrapper, parentProp) => {
  */
 const adaptedResult = (result) => {
   return (
-    is (result, HTMLCollection) || is (result, NodeList) ?
-      [...result].map (x => wrapper (x)) :
-      is (result, SVGElement) ?
-        wrapper (result) :
-        type (result, STRING) ?
-          Number.isNaN (Number (result)) ?
+    is(result, HTMLCollection) || is(result, NodeList) ?
+      [...result].map(x => wrapper(x)) :
+      is(result, SVGElement) ?
+        wrapper(result) :
+        isType(result, STRING) ?
+          result === '' || Number.isNaN(Number(result)) ?
             result :
-            Number (result) :
+            Number(result) :
           result
   );
 };
@@ -381,22 +587,35 @@ const adaptedResult = (result) => {
  */
 const pluginCallback = (wrapped, prop, args) => {
   if (wrapped._call) {
-    return wrapped._call (wrapped, prop, args);
+    return wrapped._call(wrapped, prop, args);
   }
 };
 
 /**
- * gySVGObject
+ * pluginCallbackPathD
+ * @param {Object} wrapped
+ * @param {string} prop
+ * @param {Array} args
+ */
+const pluginCallbackPathD = (wrapped, prop, args) => {
+  if (wrapped._d) {
+    return wrapped._d(wrapped, prop, args);
+  }
+};
+
+/**
+ * @typedef {function} gySVG
+ */
+
+/**
+ * gySVG
  * @param {Object|gySVGObject|string} [el]
  * @returns {gySVGObject|Object|null}
  * @constructor
  */
 export function gySVG (el) {
-  pluginCallback (gySVG, EMPTY, [el]);
-  if (type (el, OBJECT)) {
-    return isWrapped (el) ? el : wrapper (el);
-  }
-  return create (el || 'svg');
+  pluginCallback(gySVG, EMPTY_STRING, [el]);
+  return createWrap(isType(el, UNDEFINED) ? SVG : el);
 }
 
 export default gySVG;
@@ -410,7 +629,11 @@ gySVG.isWrapped = isWrapped;
 /**
  * gySVG.extend
  * @param {Function} plugin
+ * @return {gySVG}
  */
-gySVG.extend = (plugin) => plugin (gySVG, gySVGObject);
+gySVG.extend = (plugin) => {
+  plugin(gySVG, GYSVGObject);
+  return gySVG;
+}
 
 

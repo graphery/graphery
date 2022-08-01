@@ -13,7 +13,7 @@ const resizeObserverCache = new WeakMap ();
  * @usage gySVG.extension( keepAspect )
  * @type {{keepAspect() : gySVGObject}}
  */
-export default function install (gySVG, gySVGObject) {
+export default function resizeObserverPlugin (gySVG, gySVGObject) {
   // Update gySVGObject
   Object.assign (
     gySVGObject.prototype, {

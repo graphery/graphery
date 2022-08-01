@@ -1,8 +1,11 @@
 {
   "name": "@graphery/svg",
   "description": "Graphery SVG library",
-  "version": "0.1.5",
+  "version": "1.0.0",
   "type": "module",
+  "scripts": {
+    "workbench": "node ../tools/workbench -l svg -i ./build/index.js -t ./test/cases -p 7000"
+  },
   "license": "MIT",
   "keywords": [
     "svg",
@@ -30,15 +33,21 @@
       "url": "https://github.com/pabloalmunia"
     },
     {
+      "name": "Samuel Méndez",
       "url": "https://github.com/samuelmgalan"
     },
     {
+      "name": "Javier Martín",
       "url": "https://github.com/javi3rms"
     },
     {
       "name": "Irene Arribas"
     },
     {
+      "name": "Mariangeles Codispoto"
+    },
+    {
+      "nane": "todojs",
       "url": "https://github.com/todojs"
     }
   ]

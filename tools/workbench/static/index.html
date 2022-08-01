@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Graphery Workbench</title>
+  <link rel="icon" href="gy.svg">
+  <link rel="stylesheet" href="test.css">
+</head>
+<body>
+<div id="menu">
+  <h1><img src="./graphery.svg" alt="graphery"/></h1>
+  <input type="search" placeholder="filter">
+  <h2 id="label">loading...</h2>
+  <ul id="list"></ul>
+  <br/>
+  <h3>options</h3>
+  <p>
+    <label><input type="checkbox" id="title"
+                  onchange="document.querySelector('.active')?.click()"> hide title</label><br/>
+    <label><input type="checkbox" id="description"
+                  onchange="document.querySelector('.active')?.click()"> hide description</label>
+  </p>
+</div>
+<div id="test">
+  <h1>Welcome to Graphery Test Workbench<br/><label>Please, select a test...</label></h1>
+  <iframe name="test" title="test"></iframe>
+</div>
+<script>
+  const queryString = new URLSearchParams(window.location.search);
+  const impURL      = queryString.getAll('imp');
+  const libURL      = queryString.getAll('lib');
+  const list        = document.querySelector('#list');
+  const search      = document.querySelector('input[type=search]')
+
+  fetch('/test/')
+    .then(response => response.json())
+    .then(data => {
+      document.querySelector('#label').innerHTML = data.label;
+      for (let test of data.test) {
+        const li    = document.createElement('li');
+        const a     = document.createElement('a');
+        a.href      = test.url;
+        a.innerHTML = test.name;
+        li.appendChild(a);
+        a.addEventListener(
+          'click',
+          (evt) => {
+            evt.preventDefault();
+            document.location.hash = `#${encodeURI(a.href)}`;
+            document.querySelector('.active')?.classList.remove('active');
+            a.classList.add('active');
+            document.querySelector('#test h1').innerHTML = document.querySelector('#title').checked ?
+              '' :
+              a.innerHTML;
+            let url                                      = './load.html?case=' + a.href;
+            for (let imp of impURL) {
+              url += "&imp=" + imp;
+            }
+            for (let lib of libURL) {
+              url += "&lib=" + lib;
+            }
+            if (!document.querySelector('#description').checked) {
+              url += '&description=1';
+            }
+            document.querySelector('[name=test]').src = url;
+            return false;
+          }
+        );
+        list.appendChild(li);
+        if (document.location.hash === `#${encodeURI(a.href)}`) {
+          a.click();
+        }
+      }
+    });
+
+  (function connect () {
+    const ws = new WebSocket(`ws://${location.hostname}:${location.port}`);
+    ws.addEventListener('message', (msg) => {
+      (new Function(msg.data))();
+    });
+    ws.addEventListener('close', () => {
+      console.log('Workbench close');
+      setTimeout(connect, 500);
+    });
+    ws.addEventListener('error', (err) => {
+      ws.close();
+      // console.log('Workbench connection error', err);
+      // setTimeout (connect, 500);
+    });
+  })();
+
+  search.addEventListener('input', () => {
+    const value = search.value.toLowerCase();
+    for (let li of list.children) {
+      if (li.innerText.toLowerCase().includes(value)) {
+        li.style.display = 'block';
+      } else {
+        li.style.display = 'none';
+      }
+    }
+  });
+</script>
+</body>
+</html>

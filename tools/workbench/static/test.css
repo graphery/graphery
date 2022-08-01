@@ -1,0 +1,114 @@
+html, body {
+  height : 100%;
+  margin : 0;
+}
+
+html {
+  box-sizing : border-box;
+  font-size  : 14px;
+}
+
+body {
+  color       : #333;
+  font-family : "Roboto", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
+  font-weight : 300;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight : 300;
+  margin-bottom  : 0.5em;
+  margin-top  : 0;
+}
+
+h1 {
+  margin-bottom  : 0;
+  font-size      : 1.8rem;
+  letter-spacing : +.1rem;
+  line-height    : 2;
+}
+
+h1 label {
+  font-size      : 1rem;
+  letter-spacing : 0;
+  line-height    : 1rem;
+}
+
+h2 {
+  font-size      : 1.6rem;
+  letter-spacing : -.1rem;
+}
+
+h3 {
+  font-size      : 1.4rem;
+  letter-spacing : -.1rem;
+}
+
+a {
+  color           : #555;
+  text-decoration : none
+}
+
+a {
+  color           : #555;
+  text-decoration : none
+}
+
+a:focus, a:hover, a:active, a.active {
+  font-weight : bold;
+}
+
+ul {
+  margin-block    : 0;
+  padding         : 0 1em;
+  list-style-type : none;
+  line-height     : 1.5;
+}
+
+input[type=search] {
+  border        : 1px solid lightgrey;
+  width         : 100%;
+  height        : 2em;
+  margin-bottom : 1em;
+  color         : #555;
+}
+
+input[type=search]:focus {
+  outline : none;
+}
+
+::placeholder {
+  color : lightgrey;
+}
+
+#menu {
+  position         : absolute;
+  padding          : 1em;
+  top              : 0;
+  left             : 0;
+  bottom           : 0;
+  width            : 260px;
+  height           : calc(100% - 2em);
+  overflow         : hidden;
+  background-color : #f6f9fc;
+  border-right     : 1px solid #c0c0c0;
+  overflow-y       : auto;
+}
+
+#test {
+  position : absolute;
+  top      : 0;
+  left     : calc(260px + 2em);
+  bottom   : 0;
+  right    : 0;
+  border   : 0;
+  padding  : 1em;
+}
+
+#test iframe {
+  position : absolute;
+  display  : block;
+  top      : 60px;
+  width    : calc(100% - 2em);
+  height   : calc(100% - 60px);
+  border   : 0;
+}

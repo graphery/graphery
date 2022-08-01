@@ -1110,9 +1110,16 @@ const STYLE                   = [
   'zIndex',
   'zoom'
 ];
+const D = [
+  'M','m',
+  'A','a',
+  'C','c','S','s',
+  'L', 'l', 'H', 'h', 'V', 'v',
+  'Q','q','T','t',
+  'Z','z'
+]
 const isValidElement          = (parent, child) => ELEMENTS[ parent ] && ELEMENTS[ parent ].includes (child);
 const isValidMethod           = (gySVGObject, tag, f) => {
-  // debugger;
   return (
     f.indexOf ('style.') === 0 ?
       isValidStyleMethod (tag, f.substring (6)) :
@@ -1124,15 +1131,17 @@ const isValidMethod           = (gySVGObject, tag, f) => {
 const isValidMethodParameters = (tag, f) => true;
 const isValidStyleMethod      = (tag, f) => !!STYLE.includes (f);
 const isValidClassListMethod  = (tag, f) => !!CLASSLIST.includes (f);
+const isValidPathD            = (tag, f) => !!D.includes(f);
 
-export default function install (gySVG, gySVGObject) {
+export default function debugPlugin (gySVG, gySVGObject) {
 
   // Update gySVG
   Object.assign (
     gySVG,
     {
+      _debug: 0,
       debugLevel (level) {
-        this._debug = level;
+        gySVG._debug = level;
       },
       get DEBUG_NONE () {
         return 0;
@@ -1150,7 +1159,7 @@ export default function install (gySVG, gySVGObject) {
         if (gySVG._debug >= gySVG.DEBUG_ALL) {
           console.info (`${ NAME } call gySVG( ${ toString (args) } )`);
         }
-      }
+      },
     }
   );
   // Update gySVGObject
@@ -1173,6 +1182,18 @@ export default function install (gySVG, gySVGObject) {
         }
         if (gySVG._debug >= gySVG.DEBUG_ALL) {
           console.info (`${ NAME } call ${ tag }.${ prop }( ${ toString (args) } )`);
+        }
+      },
+      _d (wrapped, prop, args) {
+        if (gySVG._debug === gySVG.DEBUG_NONE) {
+          return;
+        }
+        const tag = wrapped.el.tagName;
+        if (!isValidPathD (tag, prop)) {
+          return console.error (`${ NAME } unknown method ${ tag }.d.${ prop }() ${ origin () }`);
+        }
+        if (gySVG._debug >= gySVG.DEBUG_WARNING) {
+          console.info (`${ NAME } call ${ tag }.d.${ prop }( ${ toString (args) } )`);
         }
       }
     }
