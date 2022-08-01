@@ -1,0 +1,8 @@
+{
+  "name": "graphery-tools",
+  "dependencies": {
+    "commander": "^6.1.0",
+    "open": "^7.3.1",
+    "ws": "^7.4.6"
+  }
+}
