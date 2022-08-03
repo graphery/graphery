@@ -1,7 +1,7 @@
 {
   "name": "@graphery/svg",
   "description": "Graphery SVG library",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "module",
   "scripts": {
     "workbench": "node ../tools/workbench -l svg -i ./build/index.js -t ./test/cases -p 7000"
